@@ -250,6 +250,18 @@ class rsyslog::config (
   $_udp_listen_port = pick($::rsyslog::udp_listen_port, '514')
   $_enable_tls_logging = pick($::rsyslog::enable_tls_logging, false)
 
+  if $facts['os']['name'] in ['RedHat','CentOS'] {
+    $_sysconfdir = '/etc/sysconfig'
+    $_sysconfig_template = 'sysconfig.erb'
+  }
+  elsif $facts['os']['name'] in ['Debian','Ubuntu'] {
+    $_sysconfdir = '/etc/default'
+    $_sysconfig_template = 'default.erb'
+  }
+  else {
+    fail("OS '${facts['os']['name']}' not supported by '${module_name}'")
+  }
+
   if $::rsyslog::pki {
     pki::copy { 'rsyslog':
       source => $::rsyslog::app_pki_external_source,
@@ -329,11 +341,11 @@ class rsyslog::config (
     content => "\$IncludeConfig ${::rsyslog::rule_dir}/*.conf"
   }
 
-  file { '/etc/sysconfig/rsyslog':
+  file { "${_sysconfdir}/rsyslog":
     owner   => 'root',
     group   => 'root',
     mode    => '0640',
-    content => template("${module_name}/sysconfig.erb")
+    content => template("${module_name}/${_sysconfig_template}")
   }
 
   rsyslog::rule { '00_simp_pre_logging/global.conf':

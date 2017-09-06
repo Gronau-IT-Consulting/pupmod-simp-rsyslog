@@ -13,7 +13,11 @@ class rsyslog::install (
 ) {
   assert_private()
 
-  $_full_rsyslog_package = "${::rsyslog::package_name}.${facts['hardwaremodel']}"
+  if $facts['os']['name'] in ['RedHat','CentOS'] {
+    $_full_rsyslog_package = "${::rsyslog::package_name}.${facts['hardwaremodel']}"
+  } else {
+    $_full_rsyslog_package = "${::rsyslog::package_name}"
+  }
 
   package { $_full_rsyslog_package: ensure => $ensure }
 
